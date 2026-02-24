@@ -1,6 +1,7 @@
 package io.github.tooba.device_inventory_service.controller.advice;
 
 import io.github.tooba.device_inventory_service.controller.responseDto.ErrorResponse;
+import io.github.tooba.device_inventory_service.service.exception.DeviceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -86,6 +87,21 @@ public class GlobalExceptionHandler {
                 "INTERNAL_ERROR",
                 "An unexpected error occurred",
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                request.getRequestURI(),
+                Instant.now(),
+                null
+        );
+    }
+    @ExceptionHandler(DeviceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFound(
+            DeviceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return new ErrorResponse(
+                "RESOURCE_NOT_FOUND",
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
                 request.getRequestURI(),
                 Instant.now(),
                 null

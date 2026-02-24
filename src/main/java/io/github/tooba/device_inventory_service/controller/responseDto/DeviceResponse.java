@@ -6,7 +6,7 @@ import io.github.tooba.device_inventory_service.service.result.DeviceResult;
 import java.time.Instant;
 import java.util.UUID;
 
-public record CreateDeviceResponse(
+public record DeviceResponse(
         UUID id,
         String name,
         String brand,
@@ -14,8 +14,8 @@ public record CreateDeviceResponse(
         Instant creationTime
 ) {
 
-    public static CreateDeviceResponse from(DeviceResult result) {
-        return new CreateDeviceResponse(
+    public static DeviceResponse from(DeviceResult result) {
+        return new DeviceResponse(
                 result.id(),
                 result.name(),
                 result.brand(),

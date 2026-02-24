@@ -49,4 +49,19 @@ public class Device {
     public static Device create(String name, String brand, DeviceState state) {
         return new Device(name, brand, state);
     }
+
+    public void update(String name, String brand, DeviceState newState) {
+
+        if (this.state == DeviceState.IN_USE) {
+            if (!this.name.equals(name) || !this.brand.equals(brand)) {
+                throw new IllegalStateException(
+                        "Name and brand cannot be updated while device is in use"
+                );
+            }
+        }
+
+        this.name = name;
+        this.brand = brand;
+        this.state = newState;
+    }
 }
