@@ -3,10 +3,12 @@ package io.github.tooba.device_inventory_service.controller;
 
 import io.github.tooba.device_inventory_service.constant.DeviceState;
 import io.github.tooba.device_inventory_service.controller.requestDto.CreateDeviceRequest;
+import io.github.tooba.device_inventory_service.controller.requestDto.PatchDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.requestDto.UpdateDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.responseDto.DeviceResponse;
 import io.github.tooba.device_inventory_service.service.DeviceService;
 import io.github.tooba.device_inventory_service.service.command.CreateDeviceCommand;
+import io.github.tooba.device_inventory_service.service.command.PatchDeviceCommand;
 import io.github.tooba.device_inventory_service.service.command.UpdateDeviceCommand;
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
 import jakarta.validation.Valid;
@@ -77,5 +79,22 @@ public class DeviceController {
                 service.getAll(brand, state, pageable);
 
         return resultPage.map(DeviceResponse::from);
+    }
+    @PatchMapping("/{id}")
+    public DeviceResponse patch(
+            @PathVariable UUID id,
+            @RequestBody PatchDeviceRequest request
+    ) {
+
+        var command = new PatchDeviceCommand(
+                id,
+                request.name(),
+                request.brand(),
+                request.state()
+        );
+
+        DeviceResult result = service.patch(command);
+
+        return DeviceResponse.from(result);
     }
 }

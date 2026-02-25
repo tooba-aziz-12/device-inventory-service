@@ -168,4 +168,30 @@ class DeviceControllerIT {
         assertThat(first.get("name").asText()).isEqualTo("iPhone");
         assertThat(first.get("brand").asText()).isEqualTo("Apple");
     }
+    @Test
+    void shouldPartiallyUpdateDevice() {
+
+        DeviceResponse created = client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("iPhone", "Apple", DeviceState.AVAILABLE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        DeviceResponse patched = client.patch()
+                .uri("/devices/{id}", created.id())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                  {
+                    "name": "Galaxy"
+                  }
+                  """)
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        assertThat(patched.name()).isEqualTo("Galaxy");
+        assertThat(patched.brand()).isEqualTo("Apple");
+        assertThat(patched.creationTime())
+                .isEqualTo(created.creationTime());
+    }
 }

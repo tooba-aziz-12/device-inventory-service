@@ -4,6 +4,7 @@ import io.github.tooba.device_inventory_service.constant.DeviceState;
 import io.github.tooba.device_inventory_service.entity.Device;
 import io.github.tooba.device_inventory_service.repository.DeviceRepository;
 import io.github.tooba.device_inventory_service.service.command.CreateDeviceCommand;
+import io.github.tooba.device_inventory_service.service.command.PatchDeviceCommand;
 import io.github.tooba.device_inventory_service.service.command.UpdateDeviceCommand;
 import io.github.tooba.device_inventory_service.service.exception.DeviceNotFoundException;
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
@@ -111,6 +112,32 @@ public class DeviceService {
                         device.getState(),
                         device.getCreationTime()
                 )
+        );
+    }
+    @Transactional
+    public DeviceResult patch(PatchDeviceCommand command) {
+
+        Device device = repo.findById(command.id())
+                .orElseThrow(() ->
+                        new DeviceNotFoundException(
+                                "Device not found with id: " + command.id()
+                        )
+                );
+
+        device.patch(
+                command.name(),
+                command.brand(),
+                command.state()
+        );
+
+        Device saved = repo.save(device);
+
+        return new DeviceResult(
+                saved.getId(),
+                saved.getName(),
+                saved.getBrand(),
+                saved.getState(),
+                saved.getCreationTime()
         );
     }
 }

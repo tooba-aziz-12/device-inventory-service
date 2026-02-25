@@ -5,6 +5,7 @@ import io.github.tooba.device_inventory_service.entity.Device;
 import io.github.tooba.device_inventory_service.fixture.DeviceTestDataFactory;
 import io.github.tooba.device_inventory_service.repository.DeviceRepository;
 import io.github.tooba.device_inventory_service.service.command.CreateDeviceCommand;
+import io.github.tooba.device_inventory_service.service.command.PatchDeviceCommand;
 import io.github.tooba.device_inventory_service.service.command.UpdateDeviceCommand;
 import io.github.tooba.device_inventory_service.service.exception.DeviceNotFoundException;
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
@@ -285,6 +286,62 @@ class DeviceServiceTest {
             assertThat(first.state()).isEqualTo(DeviceState.AVAILABLE);
 
             verify(repository).findAll(any(Specification.class), eq(pageable));
+        }
+    }
+    @Nested
+    @DisplayName("patch()")
+    class PatchDeviceServiceTests {
+
+        @Test
+        void shouldPatchNameOnly() {
+
+            UUID id = UUID.randomUUID();
+
+            Device existing = DeviceTestDataFactory.builder()
+                    .withId(id)
+                    .withName("iPhone")
+                    .withBrand("Apple")
+                    .withState(DeviceState.AVAILABLE)
+                    .build();
+
+            when(repository.findById(id)).thenReturn(Optional.of(existing));
+            when(repository.save(existing)).thenReturn(existing);
+
+            PatchDeviceCommand command =
+                    new PatchDeviceCommand(id, "Galaxy", null, null);
+
+            DeviceResult result = service.patch(command);
+
+            assertThat(result.name()).isEqualTo("Galaxy");
+            assertThat(result.brand()).isEqualTo("Apple");
+        }
+
+        @Test
+        void shouldThrowWhenNotFound() {
+
+            UUID id = UUID.randomUUID();
+            when(repository.findById(id)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                    service.patch(new PatchDeviceCommand(id, "X", null, null)))
+                    .isInstanceOf(DeviceNotFoundException.class);
+        }
+
+        @Test
+        void shouldBlockNameChangeWhenInUse() {
+
+            UUID id = UUID.randomUUID();
+
+            Device existing = DeviceTestDataFactory.builder()
+                    .withId(id)
+                    .withState(DeviceState.IN_USE)
+                    .build();
+
+            when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+            assertThatThrownBy(() ->
+                    service.patch(new PatchDeviceCommand(id, "New", null, null)))
+                    .isInstanceOf(IllegalStateException.class);
         }
     }
 }

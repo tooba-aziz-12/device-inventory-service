@@ -311,4 +311,50 @@ class DeviceControllerTest {
                     .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
         }
     }
+
+    @Nested
+    @DisplayName("PATCH /devices/{id}")
+    class PatchDeviceTests {
+
+        @Test
+        void shouldPatchSuccessfully() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.when(service.patch(any()))
+                    .thenReturn(new DeviceResult(
+                            id,
+                            "Galaxy",
+                            "Apple",
+                            DeviceState.AVAILABLE,
+                            Instant.now()
+                    ));
+
+            var request = """
+            {
+              "name": "Galaxy"
+            }
+            """;
+
+            mockMvc.perform(patch("/devices/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(request))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.name").value("Galaxy"));
+        }
+
+        @Test
+        void shouldReturn404() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.when(service.patch(any()))
+                    .thenThrow(new DeviceNotFoundException("Not found"));
+
+            mockMvc.perform(patch("/devices/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+                    .andExpect(status().isNotFound());
+        }
+    }
 }
