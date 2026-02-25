@@ -190,4 +190,45 @@ class DeviceServiceTest {
             assertThat(existing.getCreationTime()).isEqualTo(originalCreationTime);
         }
     }
+    @Nested
+    @DisplayName("getById()")
+    class GetByIdServiceTests {
+        @Test
+        @DisplayName("should return device when found")
+        void shouldReturnDeviceWhenFound() {
+
+            UUID id = UUID.randomUUID();
+
+            Device existing = DeviceTestDataFactory.builder()
+                    .withId(id)
+                    .withName("iPhone")
+                    .withBrand("Apple")
+                    .withState(DeviceState.AVAILABLE)
+                    .build();
+
+            when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+            DeviceResult result = service.getById(id);
+
+            assertThat(result.id()).isEqualTo(id);
+            assertThat(result.name()).isEqualTo("iPhone");
+            assertThat(result.brand()).isEqualTo("Apple");
+            assertThat(result.state()).isEqualTo(DeviceState.AVAILABLE);
+
+            verify(repository, never()).save(any());
+        }
+        @Test
+        @DisplayName("should throw when device not found")
+        void shouldThrowWhenNotFound() {
+
+            UUID id = UUID.randomUUID();
+
+            when(repository.findById(id)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.getById(id))
+                    .isInstanceOf(DeviceNotFoundException.class);
+
+            verify(repository, never()).save(any());
+        }
+    }
 }

@@ -95,4 +95,27 @@ class DeviceControllerIT {
 
         assertThat(updated.creationTime()).isEqualTo(created.creationTime());
     }
+    @Test
+    @DisplayName("GET /devices/{id} → returns device successfully")
+    void shouldFetchDeviceById() {
+
+        DeviceResponse created = client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("iPhone", "Apple", DeviceState.AVAILABLE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        DeviceResponse fetched = client.get()
+                .uri("/devices/{id}", created.id())
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        assertThat(fetched).isNotNull();
+        assertThat(fetched.id()).isEqualTo(created.id());
+        assertThat(fetched.name()).isEqualTo("iPhone");
+        assertThat(fetched.brand()).isEqualTo("Apple");
+        assertThat(fetched.state()).isEqualTo(DeviceState.AVAILABLE);
+        assertThat(fetched.creationTime()).isEqualTo(created.creationTime());
+    }
 }

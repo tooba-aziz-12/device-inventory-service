@@ -9,6 +9,8 @@ import io.github.tooba.device_inventory_service.service.result.DeviceResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class DeviceService {
 
@@ -62,6 +64,24 @@ public class DeviceService {
                 saved.getBrand(),
                 saved.getState(),
                 saved.getCreationTime()
+        );
+    }
+    @Transactional(readOnly = true)
+    public DeviceResult getById(UUID id) {
+
+        Device device = repo.findById(id)
+                .orElseThrow(() ->
+                        new DeviceNotFoundException(
+                                "Device not found with id: " + id
+                        )
+                );
+
+        return new DeviceResult(
+                device.getId(),
+                device.getName(),
+                device.getBrand(),
+                device.getState(),
+                device.getCreationTime()
         );
     }
 }

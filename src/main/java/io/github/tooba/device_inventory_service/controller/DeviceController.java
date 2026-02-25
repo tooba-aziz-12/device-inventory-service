@@ -55,4 +55,12 @@ public class DeviceController {
 
         return DeviceResponse.from(result);
     }
+
+    @GetMapping("/{id}")
+    public DeviceResponse getById(@PathVariable UUID id) {
+
+        DeviceResult result = service.getById(id);
+
+        return DeviceResponse.from(result);
+    }
 }

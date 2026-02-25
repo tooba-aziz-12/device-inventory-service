@@ -19,9 +19,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+
 @WebMvcTest(DeviceController.class)
 class DeviceControllerTest {
 
@@ -270,6 +270,45 @@ class DeviceControllerTest {
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
                     .andExpect(jsonPath("$.status").value(500));
+        }
+    }
+    @Nested
+    @DisplayName("GET /devices/{id}")
+    class GetDeviceTests {
+        @Test
+        @DisplayName("→ 200 OK")
+        void shouldReturnDevice() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.when(service.getById(id))
+                    .thenReturn(new DeviceResult(
+                            id,
+                            "iPhone",
+                            "Apple",
+                            DeviceState.AVAILABLE,
+                            Instant.now()
+                    ));
+
+            mockMvc.perform(get("/devices/{id}", id))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(id.toString()))
+                    .andExpect(jsonPath("$.name").value("iPhone"))
+                    .andExpect(jsonPath("$.brand").value("Apple"))
+                    .andExpect(jsonPath("$.state").value("AVAILABLE"));
+        }
+        @Test
+        @DisplayName("→ 404 Not Found")
+        void shouldReturn404WhenNotFound() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.when(service.getById(id))
+                    .thenThrow(new DeviceNotFoundException("Not found"));
+
+            mockMvc.perform(get("/devices/{id}", id))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
         }
     }
 }
