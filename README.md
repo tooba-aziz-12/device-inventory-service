@@ -90,6 +90,17 @@ create db devices
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
+## Git Hooks Setup (Required for Local Push Validation)
+
+This project enforces test execution and JaCoCo coverage checks before every `git push`.
+
+After cloning the repository, run:
+
+```bash
+git config core.hooksPath githooks
+chmod +x githooks/pre-push
+````
+
 #### Application URL:
 
 http://localhost:8181
@@ -190,9 +201,6 @@ This layered testing approach validates both business logic and end-to-end API b
 
 #### Database Indexing
 - Add indexes on brand and state to improve query performance.
-
-#### CI/CD Pipeline
-- Automate test execution, Docker builds, and quality checks.
 
 #### Monitoring & Observability
 - Extend Actuator metrics, structured logging, correlation IDs, and monitoring integration.
