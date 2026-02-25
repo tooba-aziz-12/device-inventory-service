@@ -1,16 +1,19 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/devices
-    username: toobaaziz
-    password:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devices}
+    username: ${SPRING_DATASOURCE_USERNAME:device_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:device_pass}
 
   jpa:
     hibernate:
       ddl-auto: update
-    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
 
 server:
-  port: 8090
+  port: 8080
 
 management:
   endpoints:

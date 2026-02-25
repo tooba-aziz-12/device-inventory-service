@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/devices
+    username: toobaaziz
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: 8181
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

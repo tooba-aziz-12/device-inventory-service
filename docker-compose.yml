@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: device-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: devices
+      POSTGRES_USER: device_user
+      POSTGRES_PASSWORD: device_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  device-service:
+    build: .
+    container_name: device-service
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/devices
+      SPRING_DATASOURCE_USERNAME: device_user
+      SPRING_DATASOURCE_PASSWORD: device_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8090:8080"
+
+volumes:
+  postgres_data:
