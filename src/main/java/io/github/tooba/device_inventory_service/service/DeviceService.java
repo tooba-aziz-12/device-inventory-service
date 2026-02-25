@@ -140,4 +140,22 @@ public class DeviceService {
                 saved.getCreationTime()
         );
     }
+    @Transactional
+    public void delete(UUID id) {
+
+        Device device = repo.findById(id)
+                .orElseThrow(() ->
+                        new DeviceNotFoundException(
+                                "Device not found with id: " + id
+                        )
+                );
+
+        if (device.getState() == DeviceState.IN_USE) {
+            throw new IllegalStateException(
+                    "In-use devices cannot be deleted"
+            );
+        }
+
+        repo.delete(device);
+    }
 }

@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -106,7 +107,7 @@ class DeviceControllerTest {
             mockMvc.perform(post("/devices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(status().isUnprocessableContent())
                     .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"))
                     .andExpect(jsonPath("$.message").value("Business rule violated"))
                     .andExpect(jsonPath("$.status").value(422))
@@ -243,7 +244,7 @@ class DeviceControllerTest {
             mockMvc.perform(put("/devices/{id}", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(request))
-                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(status().isUnprocessableContent())
                     .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"))
                     .andExpect(jsonPath("$.status").value(422));
         }
@@ -355,6 +356,48 @@ class DeviceControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /devices/{id}")
+    class DeleteDeviceTests {
+
+        @Test
+        void shouldReturn204WhenDeleted() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            mockMvc.perform(delete("/devices/{id}", id))
+                    .andExpect(status().isNoContent());
+
+            verify(service).delete(id);
+        }
+
+        @Test
+        void shouldReturn404WhenNotFound() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.doThrow(new DeviceNotFoundException("Not found"))
+                    .when(service).delete(id);
+
+            mockMvc.perform(delete("/devices/{id}", id))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+        }
+
+        @Test
+        void shouldReturn422WhenInUse() throws Exception {
+
+            UUID id = UUID.randomUUID();
+
+            Mockito.doThrow(new IllegalStateException("In-use devices cannot be deleted"))
+                    .when(service).delete(id);
+
+            mockMvc.perform(delete("/devices/{id}", id))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
         }
     }
 }

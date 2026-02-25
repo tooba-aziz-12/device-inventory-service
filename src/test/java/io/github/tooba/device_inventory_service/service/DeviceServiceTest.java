@@ -344,4 +344,57 @@ class DeviceServiceTest {
                     .isInstanceOf(IllegalStateException.class);
         }
     }
+    @Nested
+    @DisplayName("delete()")
+    class DeleteDeviceServiceTests {
+
+        @Test
+        void shouldDeleteWhenNotInUse() {
+
+            UUID id = UUID.randomUUID();
+
+            Device existing = DeviceTestDataFactory.builder()
+                    .withId(id)
+                    .withState(DeviceState.AVAILABLE)
+                    .build();
+
+            when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+            service.delete(id);
+
+            verify(repository).delete(existing);
+        }
+
+        @Test
+        void shouldThrowWhenDeviceNotFound() {
+
+            UUID id = UUID.randomUUID();
+
+            when(repository.findById(id)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.delete(id))
+                    .isInstanceOf(DeviceNotFoundException.class);
+
+            verify(repository, never()).delete((Device) any());
+        }
+
+        @Test
+        void shouldBlockDeleteWhenInUse() {
+
+            UUID id = UUID.randomUUID();
+
+            Device existing = DeviceTestDataFactory.builder()
+                    .withId(id)
+                    .withState(DeviceState.IN_USE)
+                    .build();
+
+            when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+            assertThatThrownBy(() -> service.delete(id))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("cannot be deleted");
+
+            verify(repository, never()).delete((Device) any());
+        }
+    }
 }

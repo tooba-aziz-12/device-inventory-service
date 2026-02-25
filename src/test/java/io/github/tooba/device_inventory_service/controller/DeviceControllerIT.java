@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -193,5 +194,50 @@ class DeviceControllerIT {
         assertThat(patched.brand()).isEqualTo("Apple");
         assertThat(patched.creationTime())
                 .isEqualTo(created.creationTime());
+    }
+    @Test
+    void shouldDeleteDeviceSuccessfully() {
+
+        DeviceResponse created = client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("iPhone", "Apple", DeviceState.AVAILABLE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        client.delete()
+                .uri("/devices/{id}", created.id())
+                .retrieve()
+                .toBodilessEntity();
+
+        var exception = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.client.HttpClientErrorException.NotFound.class,
+                () -> client.get()
+                        .uri("/devices/{id}", created.id())
+                        .retrieve()
+                        .body(DeviceResponse.class)
+        );
+
+        assertThat(exception.getStatusCode().value()).isEqualTo(404);
+    }
+    @Test
+    void shouldNotDeleteWhenInUse() {
+
+        DeviceResponse created = client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("iPhone", "Apple", DeviceState.IN_USE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        var exception = org.junit.jupiter.api.Assertions.assertThrows(
+                HttpClientErrorException.UnprocessableContent.class,
+                () -> client.delete()
+                        .uri("/devices/{id}", created.id())
+                        .retrieve()
+                        .toBodilessEntity()
+        );
+
+        assertThat(exception.getStatusCode().value()).isEqualTo(422);
     }
 }
