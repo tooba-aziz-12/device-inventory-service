@@ -1,6 +1,7 @@
 package io.github.tooba.device_inventory_service.controller;
 
 
+import io.github.tooba.device_inventory_service.constant.DeviceState;
 import io.github.tooba.device_inventory_service.controller.requestDto.CreateDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.requestDto.UpdateDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.responseDto.DeviceResponse;
@@ -9,6 +10,8 @@ import io.github.tooba.device_inventory_service.service.command.CreateDeviceComm
 import io.github.tooba.device_inventory_service.service.command.UpdateDeviceCommand;
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,5 +65,17 @@ public class DeviceController {
         DeviceResult result = service.getById(id);
 
         return DeviceResponse.from(result);
+    }
+    @GetMapping
+    public Page<DeviceResponse> getAll(
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) DeviceState state,
+            Pageable pageable
+    ) {
+
+        Page<DeviceResult> resultPage =
+                service.getAll(brand, state, pageable);
+
+        return resultPage.map(DeviceResponse::from);
     }
 }

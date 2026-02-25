@@ -4,13 +4,16 @@ import io.github.tooba.device_inventory_service.constant.DeviceState;
 import io.github.tooba.device_inventory_service.controller.requestDto.CreateDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.requestDto.UpdateDeviceRequest;
 import io.github.tooba.device_inventory_service.controller.responseDto.DeviceResponse;
+import io.github.tooba.device_inventory_service.repository.DeviceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,8 +25,12 @@ class DeviceControllerIT {
 
     private RestClient client;
 
+    @Autowired
+    DeviceRepository deviceRepository;
+
     @BeforeEach
     void setUp() {
+        deviceRepository.deleteAll();
         this.client = RestClient.builder()
                 .baseUrl("http://localhost:" + port)
                 .build();
@@ -117,5 +124,48 @@ class DeviceControllerIT {
         assertThat(fetched.brand()).isEqualTo("Apple");
         assertThat(fetched.state()).isEqualTo(DeviceState.AVAILABLE);
         assertThat(fetched.creationTime()).isEqualTo(created.creationTime());
+    }
+    @Test
+    void shouldFetchDevicesWithPaginationAndFiltering() throws Exception {
+
+        client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("iPhone", "Apple", DeviceState.AVAILABLE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        client.post()
+                .uri("/devices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest("Galaxy", "Samsung", DeviceState.AVAILABLE))
+                .retrieve()
+                .body(DeviceResponse.class);
+
+        String response = client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/devices")
+                        .queryParam("brand", "Apple")
+                        .queryParam("page", 0)
+                        .queryParam("size", 1)
+                        .build())
+                .retrieve()
+                .body(String.class);
+
+        var json = new ObjectMapper().readTree(response);
+
+        // Pagination metadata
+        assertThat(json.get("number").asInt()).isEqualTo(0);
+        assertThat(json.get("totalElements").asInt()).isEqualTo(1);
+        assertThat(json.get("totalPages").asInt()).isEqualTo(1);
+
+        // Content
+        var content = json.get("content");
+        assertThat(content).isNotNull();
+        assertThat(content.size()).isEqualTo(1);
+
+        var first = content.get(0);
+        assertThat(first.get("name").asText()).isEqualTo("iPhone");
+        assertThat(first.get("brand").asText()).isEqualTo("Apple");
     }
 }

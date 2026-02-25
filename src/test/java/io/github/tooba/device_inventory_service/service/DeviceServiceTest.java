@@ -8,19 +8,30 @@ import io.github.tooba.device_inventory_service.service.command.CreateDeviceComm
 import io.github.tooba.device_inventory_service.service.command.UpdateDeviceCommand;
 import io.github.tooba.device_inventory_service.service.exception.DeviceNotFoundException;
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import jakarta.persistence.criteria.*;
 
 class DeviceServiceTest {
 
@@ -29,6 +40,15 @@ class DeviceServiceTest {
 
     @InjectMocks
     private DeviceService service;
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Specification<Device>> specCaptor =
+            ArgumentCaptor.forClass((Class) Specification.class);
+
+    @SuppressWarnings("unchecked")
+    Root<Device> root = mock(Root.class);
+    CriteriaQuery<?> query = mock(CriteriaQuery.class);
+    CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
     @BeforeEach
     void setUp() {
@@ -229,6 +249,42 @@ class DeviceServiceTest {
                     .isInstanceOf(DeviceNotFoundException.class);
 
             verify(repository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("getAll(brand,state,pageable)")
+    class GetAllDevicesTests {
+        @Test
+        @DisplayName("should call repository and map results")
+        void shouldReturnMappedResults() {
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            Device device = DeviceTestDataFactory.builder()
+                    .withName("iPhone")
+                    .withBrand("Apple")
+                    .withState(DeviceState.AVAILABLE)
+                    .build();
+
+            Page<Device> repoPage =
+                    new PageImpl<>(List.of(device), pageable, 1);
+
+            when(repository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(repoPage);
+
+            Page<DeviceResult> result =
+                    service.getAll("Apple", DeviceState.AVAILABLE, pageable);
+
+            assertThat(result.getTotalElements()).isEqualTo(1);
+            assertThat(result.getContent()).hasSize(1);
+
+            DeviceResult first = result.getContent().get(0);
+            assertThat(first.name()).isEqualTo("iPhone");
+            assertThat(first.brand()).isEqualTo("Apple");
+            assertThat(first.state()).isEqualTo(DeviceState.AVAILABLE);
+
+            verify(repository).findAll(any(Specification.class), eq(pageable));
         }
     }
 }

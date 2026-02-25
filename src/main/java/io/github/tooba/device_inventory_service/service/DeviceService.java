@@ -1,5 +1,6 @@
 package io.github.tooba.device_inventory_service.service;
 
+import io.github.tooba.device_inventory_service.constant.DeviceState;
 import io.github.tooba.device_inventory_service.entity.Device;
 import io.github.tooba.device_inventory_service.repository.DeviceRepository;
 import io.github.tooba.device_inventory_service.service.command.CreateDeviceCommand;
@@ -8,6 +9,10 @@ import io.github.tooba.device_inventory_service.service.exception.DeviceNotFound
 import io.github.tooba.device_inventory_service.service.result.DeviceResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import io.github.tooba.device_inventory_service.repository.specification.DeviceSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.UUID;
 
@@ -82,6 +87,30 @@ public class DeviceService {
                 device.getBrand(),
                 device.getState(),
                 device.getCreationTime()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DeviceResult> getAll(
+            String brand,
+            DeviceState state,
+            Pageable pageable
+    ) {
+
+        Specification<Device> spec = Specification
+                .where(DeviceSpecifications.hasBrand(brand))
+                .and(DeviceSpecifications.hasState(state));
+
+        Page<Device> devices = repo.findAll(spec, pageable);
+
+        return devices.map(device ->
+                new DeviceResult(
+                        device.getId(),
+                        device.getName(),
+                        device.getBrand(),
+                        device.getState(),
+                        device.getCreationTime()
+                )
         );
     }
 }
