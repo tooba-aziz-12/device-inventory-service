@@ -9,6 +9,9 @@ spring:
       ddl-auto: update
     open-in-view: false
 
+springdoc:
+  override-with-generic-response: false
+
 server:
   port: 8181
 
