@@ -141,6 +141,62 @@ http://localhost:8090/swagger-ui/index.html
 
 http://localhost:8090/actuator/health
 
+## Monitoring & Observability
+
+The project includes a full local monitoring stack using:
+
+- Spring Boot Actuator
+- Micrometer (Prometheus registry)
+- Prometheus
+- Grafana
+
+All services are started via Docker Compose.
+
+### What This Provides
+
+- Application metrics collection
+- Health monitoring
+- Container-level observability
+- Production-ready monitoring architecture
+- Easy integration with cloud or Kubernetes environments
+
+---
+
+## Metrics Exposure
+
+The application exposes Prometheus metrics at:
+
+http://localhost:8090/actuator/prometheus
+
+Prometheus → http://localhost:9090
+
+Grafana → http://localhost:3000
+
+## Prometheus
+
+Open in browser:
+
+http://localhost:9090
+
+### To verify metrics are being scraped:
+
+- Go to Status → Targets
+- Ensure device-service is UP
+- You can test queries like:
+```bash
+up
+```
+
+## Grafana
+
+Open in browser:
+
+http://localhost:3000
+
+### Default login:
+
+admin / admin
+
 #### Stop containers:
 
 ```bash
@@ -203,6 +259,29 @@ This layered testing approach validates both business logic and end-to-end API b
 - Add indexes on brand and state to improve query performance.
 
 #### Monitoring & Observability
-- Extend Actuator metrics, structured logging, correlation IDs, and monitoring integration.
+Future improvements could include:
+
+- **Custom Business Metrics**  
+  Add domain-specific metrics (e.g., `devices_created_total`, `devices_deleted_total`, state transition counters).
+
+- **Structured Logging (JSON Logs)**  
+  Configure structured logging for better log aggregation and production readiness.
+
+- **Correlation IDs**  
+  Introduce request-level correlation IDs to trace requests across logs and services.
+
+- **Alerting Rules**  
+  Define Prometheus alert rules (e.g., service down, high error rate, high latency).
+
+- **Grafana Dashboards as Code**  
+  Provision dashboards automatically via configuration instead of manual setup.
+
+- **Distributed Tracing**  
+  Integrate OpenTelemetry for trace collection and visualization (e.g., with Tempo or Jaeger).
+
+- **Centralized Log Aggregation**  
+  Add Loki or ELK stack for centralized log storage and querying.
+
+These improvements would elevate the system from metrics-enabled to fully production-grade observability.
 
 ---

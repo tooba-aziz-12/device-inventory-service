@@ -29,5 +29,25 @@ services:
     ports:
       - "8090:8080"
 
+  prometheus:
+    image: prom/prometheus
+    container_name: device-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - device-service
+
+  grafana:
+    image: grafana/grafana
+    container_name: device-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
