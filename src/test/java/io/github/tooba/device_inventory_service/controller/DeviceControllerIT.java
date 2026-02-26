@@ -99,6 +99,7 @@ class DeviceControllerIT {
                 .body(DeviceResponse.class);
 
         assertThat(updated).isNotNull();
+        assertThat(updated.id()).isEqualTo(created.id());
         assertThat(updated.name()).isEqualTo("Galaxy");
         assertThat(updated.brand()).isEqualTo("Samsung");
         assertThat(updated.state()).isEqualTo(DeviceState.IN_USE);
