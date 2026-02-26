@@ -284,4 +284,18 @@ Future improvements could include:
 
 These improvements would elevate the system from metrics-enabled to fully production-grade observability.
 
+### Database & Performance Scaling
+
+For this type of CRUD-based service, horizontal scaling is preferred over vertical scaling.
+
+Instead of continuously increasing server size (CPU/RAM), the system can scale by running multiple application instances behind a load balancer. This approach improves availability, fault tolerance, and cost efficiency while keeping the architecture simple.
+
+For read-heavy scenarios, performance can be improved using a caching layer:
+
+- Cache frequently requested device lists or filtered results
+- Use an external cache such as Redis
+- Apply cache invalidation on create, update, or delete operations
+
+This ensures reduced database load and faster response times without adding unnecessary architectural complexity.
+
 ---
